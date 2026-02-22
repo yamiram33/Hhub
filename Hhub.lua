@@ -1,90 +1,117 @@
--- Script para Roblox con panel visible
--- Colócalo en StarterPlayerScripts como LocalScript
+-- LocalScript para StarterPlayerScripts
+-- UI futurista con control de correr, salto y trade seguro
 
--- Valores iniciales
-local defaultSpeed = 16
-local defaultJump = 50
-
--- Referencias
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
 -- Crear GUI
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-screenGui.Name = "Hb"
+screenGui.Name = "HbMarketplace"
 
 local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 250, 0, 200)
-frame.Position = UDim2.new(0, 20, 0, 100)
-frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.Size = UDim2.new(0, 300, 0, 250)
+frame.Position = UDim2.new(0.5, -150, 0.5, -125)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
+frame.BorderSizePixel = 0
 frame.Active = true
-frame.Draggable = true -- Panel movible
+frame.Draggable = true
 
--- Función para crear sliders
-local function createSlider(name, min, max, default, posY, callback)
-    local label = Instance.new("TextLabel", frame)
-    label.Size = UDim2.new(1, -10, 0, 20)
-    label.Position = UDim2.new(0, 5, 0, posY)
-    label.Text = name .. ": " .. default
-    label.TextColor3 = Color3.new(1,1,1)
-    label.BackgroundTransparency = 1
+-- Título futurista
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 40)
+title.Text = "Hb Marketplace"
+title.TextColor3 = Color3.fromRGB(0, 255, 200)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
 
-    local slider = Instance.new("TextButton", frame)
-    slider.Size = UDim2.new(1, -10, 0, 20)
-    slider.Position = UDim2.new(0, 5, 0, posY + 25)
-    slider.Text = tostring(default)
-    slider.BackgroundColor3 = Color3.fromRGB(80, 80, 200)
+-- Botón Sprint
+local sprintButton = Instance.new("TextButton", frame)
+sprintButton.Size = UDim2.new(1, -20, 0, 40)
+sprintButton.Position = UDim2.new(0, 10, 0, 50)
+sprintButton.Text = "Toggle Sprint"
+sprintButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+sprintButton.TextColor3 = Color3.new(1,1,1)
 
-    slider.MouseButton1Click:Connect(function()
-        local newValue = tonumber(slider.Text)
-        if newValue then
-            newValue = math.clamp(newValue + 5, min, max)
-            slider.Text = tostring(newValue)
-            label.Text = name .. ": " .. newValue
-            callback(newValue)
-        end
-    end)
-end
-
--- Slider para velocidad
-createSlider("Velocidad", 16, 100, defaultSpeed, 5, function(value)
-    humanoid.WalkSpeed = value
+sprintButton.MouseButton1Click:Connect(function()
+    humanoid.WalkSpeed = (humanoid.WalkSpeed == 16) and 32 or 16
 end)
 
--- Slider para salto
-createSlider("Salto", 50, 200, defaultJump, 60, function(value)
-    humanoid.JumpPower = value
-end)
-
--- Botón para activar/desactivar correr rápido
-local runButton = Instance.new("TextButton", frame)
-runButton.Size = UDim2.new(1, -10, 0, 30)
-runButton.Position = UDim2.new(0, 5, 0, 120)
-runButton.Text = "Toggle Sprint"
-runButton.BackgroundColor3 = Color3.fromRGB(200, 80, 80)
-runButton.TextColor3 = Color3.new(1,1,1)
-
-runButton.MouseButton1Click:Connect(function()
-    humanoid.WalkSpeed = (humanoid.WalkSpeed == defaultSpeed) and 32 or defaultSpeed
-end)
-
--- Botón para activar/desactivar salto alto
+-- Botón Jump
 local jumpButton = Instance.new("TextButton", frame)
-jumpButton.Size = UDim2.new(1, -10, 0, 30)
-jumpButton.Position = UDim2.new(0, 5, 0, 160)
+jumpButton.Size = UDim2.new(1, -20, 0, 40)
+jumpButton.Position = UDim2.new(0, 10, 0, 100)
 jumpButton.Text = "Toggle High Jump"
-jumpButton.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
+jumpButton.BackgroundColor3 = Color3.fromRGB(0, 200, 120)
 jumpButton.TextColor3 = Color3.new(1,1,1)
 
 jumpButton.MouseButton1Click:Connect(function()
-    humanoid.JumpPower = (humanoid.JumpPower == defaultJump) and 120 or defaultJump
+    humanoid.JumpPower = (humanoid.JumpPower == 50) and 120 or 50
 end)
 
--- Reset al respawnear
-player.CharacterAdded:Connect(function(char)
-    character = char
-    humanoid = char:WaitForChild("Humanoid")
-    humanoid.WalkSpeed = defaultSpeed
-    humanoid.JumpPower = defaultJump
+-- Slider Velocidad (simulado con botón incremental)
+local speedButton = Instance.new("TextButton", frame)
+speedButton.Size = UDim2.new(1, -20, 0, 40)
+speedButton.Position = UDim2.new(0, 10, 0, 150)
+speedButton.Text = "Velocidad: 16"
+speedButton.BackgroundColor3 = Color3.fromRGB(120, 80, 200)
+speedButton.TextColor3 = Color3.new(1,1,1)
+
+speedButton.MouseButton1Click:Connect(function()
+    local current = tonumber(speedButton.Text:match("%d+"))
+    local newValue = math.clamp(current + 5, 16, 100)
+    humanoid.WalkSpeed = newValue
+    speedButton.Text = "Velocidad: " .. newValue
+end)
+
+-- Slider Salto
+local jumpSlider = Instance.new("TextButton", frame)
+jumpSlider.Size = UDim2.new(1, -20, 0, 40)
+jumpSlider.Position = UDim2.new(0, 10, 0, 200)
+jumpSlider.Text = "Salto: 50"
+jumpSlider.BackgroundColor3 = Color3.fromRGB(200, 80, 120)
+jumpSlider.TextColor3 = Color3.new(1,1,1)
+
+jumpSlider.MouseButton1Click:Connect(function()
+    local current = tonumber(jumpSlider.Text:match("%d+"))
+    local newValue = math.clamp(current + 10, 50, 200)
+    humanoid.JumpPower = newValue
+    jumpSlider.Text = "Salto: " .. newValue
+end)
+
+-- Sistema de Trade Seguro
+local tradeConfirmed = false
+local friendConfirmed = false
+
+-- Botón de autoconfirmación propia
+local confirmButton = Instance.new("TextButton", frame)
+confirmButton.Size = UDim2.new(1, -20, 0, 40)
+confirmButton.Position = UDim2.new(0, 10, 0, 250)
+confirmButton.Text = "Confirmar Trade"
+confirmButton.BackgroundColor3 = Color3.fromRGB(255, 180, 0)
+confirmButton.TextColor3 = Color3.new(1,1,1)
+
+confirmButton.MouseButton1Click:Connect(function()
+    tradeConfirmed = true
+    confirmButton.Text = "Confirmado ✔"
+    -- Aquí puedes enviar un RemoteEvent al servidor para registrar la confirmación
+end)
+
+-- Botón para confirmar amigo (simulado)
+local friendButton = Instance.new("TextButton", frame)
+friendButton.Size = UDim2.new(1, -20, 0, 40)
+friendButton.Position = UDim2.new(0, 10, 0, 300)
+friendButton.Text = "Esperando amigo..."
+friendButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+friendButton.TextColor3 = Color3.new(1,1,1)
+
+friendButton.MouseButton1Click:Connect(function()
+    friendConfirmed = true
+    friendButton.Text = "Amigo ✔"
+    -- Aquí también se enviaría al servidor
+    if tradeConfirmed and friendConfirmed then
+        print("Trade completado de forma segura")
+        -- Lógica de trade final aquí
+    end
 end)
