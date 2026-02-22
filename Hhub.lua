@@ -1,32 +1,33 @@
--- Script básico de ejemplo para Hhub.lua
+-- Script moderno para Roblox con opción de correr más rápido
+-- Colócalo en StarterPlayerScripts como LocalScript
 
--- Mensaje de bienvenida
-print("Bienvenido a Hhub!")
+-- Configuración
+local normalSpeed = 16      -- Velocidad estándar de Roblox
+local sprintSpeed = 32      -- Velocidad al correr
+local sprintKey = Enum.KeyCode.LeftShift -- Tecla para activar sprint
 
--- Función simple
-local function saludo(nombre)
-    return "Hola, " .. nombre .. "! Gracias por usar Hhub."
-end
+-- Referencias
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
 
--- Ejecutar la función con un ejemplo
-print(saludo("Usuario"))
+-- Función para alternar velocidad
+local UserInputService = game:GetService("UserInputService")
 
--- local player1Confirmed = false
-local player2Confirmed = false
-
-function confirmTrade(player)
-    if player == player1 then
-        player1Confirmed = true
-    elseif player == player2 then
-        player2Confirmed = true
+UserInputService.InputBegan:Connect(function(input, isProcessed)
+    if not isProcessed and input.KeyCode == sprintKey then
+        humanoid.WalkSpeed = sprintSpeed
     end
+end)
 
-    if player1Confirmed and player2Confirmed then
-        executeTrade()
+UserInputService.InputEnded:Connect(function(input)
+    if input.KeyCode == sprintKey then
+        humanoid.WalkSpeed = normalSpeed
     end
-end
+end)
 
-function executeTrade()
-    print("Trade ejecutado correctamente")
-    -- Aquí iría la lógica segura del intercambio
-end
+-- Asegurar que al respawnear se reinicie la velocidad
+player.CharacterAdded:Connect(function(char)
+    humanoid = char:WaitForChild("Humanoid")
+    humanoid.WalkSpeed = normalSpeed
+end)
