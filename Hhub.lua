@@ -1,117 +1,113 @@
--- LocalScript para StarterPlayerScripts
--- UI futurista con control de correr, salto y trade seguro
+-- Script Local en StarterPlayerScripts
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TradeConfirm = ReplicatedStorage:WaitForChild("TradeConfirm")
 
 local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TradeHubUI"
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Crear GUI
-local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-screenGui.Name = "HbMarketplace"
-
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 300, 0, 250)
-frame.Position = UDim2.new(0.5, -150, 0.5, -125)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
+-- Marco principal
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 500, 0, 350)
+frame.Position = UDim2.new(0.5, -250, 0.5, -175)
+frame.BackgroundColor3 = Color3.fromRGB(15, 15, 30)
+frame.BackgroundTransparency = 0.1
 frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
+frame.Parent = screenGui
 
--- Título futurista
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, 0, 0, 40)
-title.Text = "Hb Marketplace"
-title.TextColor3 = Color3.fromRGB(0, 255, 200)
+-- Borde futurista con gradiente
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))
+}
+gradient.Rotation = 90
+gradient.Parent = frame
+
+-- Título
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0.15, 0)
 title.BackgroundTransparency = 1
+title.Text = "╔══════════════════════════════╗\n║         TRADE HUB            ║"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.GothamBold
 title.TextScaled = true
+title.Parent = frame
 
--- Botón Sprint
-local sprintButton = Instance.new("TextButton", frame)
-sprintButton.Size = UDim2.new(1, -20, 0, 40)
-sprintButton.Position = UDim2.new(0, 10, 0, 50)
-sprintButton.Text = "Toggle Sprint"
-sprintButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-sprintButton.TextColor3 = Color3.new(1,1,1)
+-- Sección ofertas
+local offers = Instance.new("TextLabel")
+offers.Size = UDim2.new(1, 0, 0.15, 0)
+offers.Position = UDim2.new(0, 0, 0.15, 0)
+offers.BackgroundTransparency = 1
+offers.Text = "╠══════════════════════════════╣\n║   TU OFERTA   |  SU OFERTA   ║"
+offers.TextColor3 = Color3.fromRGB(200, 255, 255)
+offers.Font = Enum.Font.GothamBold
+offers.TextScaled = true
+offers.Parent = frame
 
-sprintButton.MouseButton1Click:Connect(function()
-    humanoid.WalkSpeed = (humanoid.WalkSpeed == 16) and 32 or 16
-end)
+-- Ejemplo de slots de ítems
+local myItem = Instance.new("TextLabel")
+myItem.Size = UDim2.new(0.45, 0, 0.25, 0)
+myItem.Position = UDim2.new(0.05, 0, 0.3, 0)
+myItem.BackgroundColor3 = Color3.fromRGB(30, 30, 60)
+myItem.Text = "[Imagen]\nNombre\nRareza\nValor"
+myItem.TextColor3 = Color3.fromRGB(255, 255, 255)
+myItem.Font = Enum.Font.Gotham
+myItem.TextScaled = true
+myItem.Parent = frame
 
--- Botón Jump
-local jumpButton = Instance.new("TextButton", frame)
-jumpButton.Size = UDim2.new(1, -20, 0, 40)
-jumpButton.Position = UDim2.new(0, 10, 0, 100)
-jumpButton.Text = "Toggle High Jump"
-jumpButton.BackgroundColor3 = Color3.fromRGB(0, 200, 120)
-jumpButton.TextColor3 = Color3.new(1,1,1)
+local otherItem = myItem:Clone()
+otherItem.Position = UDim2.new(0.5, 0, 0.3, 0)
+otherItem.Text = "[Imagen]\nNombre\nRareza\nValor"
+otherItem.Parent = frame
 
-jumpButton.MouseButton1Click:Connect(function()
-    humanoid.JumpPower = (humanoid.JumpPower == 50) and 120 or 50
-end)
+-- Auto-confirmar
+local autoConfirm = Instance.new("TextButton")
+autoConfirm.Size = UDim2.new(0.9, 0, 0.1, 0)
+autoConfirm.Position = UDim2.new(0.05, 0, 0.6, 0)
+autoConfirm.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+autoConfirm.Text = "☑ Auto-Confirmar"
+autoConfirm.TextColor3 = Color3.fromRGB(0, 0, 0)
+autoConfirm.Font = Enum.Font.GothamBold
+autoConfirm.TextScaled = true
+autoConfirm.Parent = frame
 
--- Slider Velocidad (simulado con botón incremental)
-local speedButton = Instance.new("TextButton", frame)
-speedButton.Size = UDim2.new(1, -20, 0, 40)
-speedButton.Position = UDim2.new(0, 10, 0, 150)
-speedButton.Text = "Velocidad: 16"
-speedButton.BackgroundColor3 = Color3.fromRGB(120, 80, 200)
-speedButton.TextColor3 = Color3.new(1,1,1)
+-- Estado
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, 0, 0.1, 0)
+status.Position = UDim2.new(0, 0, 0.72, 0)
+status.BackgroundTransparency = 1
+status.Text = "Estado: Esperando..."
+status.TextColor3 = Color3.fromRGB(255, 255, 255)
+status.Font = Enum.Font.Gotham
+status.TextScaled = true
+status.Parent = frame
 
-speedButton.MouseButton1Click:Connect(function()
-    local current = tonumber(speedButton.Text:match("%d+"))
-    local newValue = math.clamp(current + 5, 16, 100)
-    humanoid.WalkSpeed = newValue
-    speedButton.Text = "Velocidad: " .. newValue
-end)
+-- Botones Confirmar y Cancelar
+local confirmButton = Instance.new("TextButton")
+confirmButton.Size = UDim2.new(0.4, 0, 0.12, 0)
+confirmButton.Position = UDim2.new(0.05, 0, 0.85, 0)
+confirmButton.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+confirmButton.Text = "[CONFIRMAR]"
+confirmButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+confirmButton.Font = Enum.Font.GothamBold
+confirmButton.TextScaled = true
+confirmButton.Parent = frame
 
--- Slider Salto
-local jumpSlider = Instance.new("TextButton", frame)
-jumpSlider.Size = UDim2.new(1, -20, 0, 40)
-jumpSlider.Position = UDim2.new(0, 10, 0, 200)
-jumpSlider.Text = "Salto: 50"
-jumpSlider.BackgroundColor3 = Color3.fromRGB(200, 80, 120)
-jumpSlider.TextColor3 = Color3.new(1,1,1)
+local cancelButton = confirmButton:Clone()
+cancelButton.Position = UDim2.new(0.55, 0, 0.85, 0)
+cancelButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+cancelButton.Text = "[CANCELAR]"
+cancelButton.Parent = frame
 
-jumpSlider.MouseButton1Click:Connect(function()
-    local current = tonumber(jumpSlider.Text:match("%d+"))
-    local newValue = math.clamp(current + 10, 50, 200)
-    humanoid.JumpPower = newValue
-    jumpSlider.Text = "Salto: " .. newValue
-end)
-
--- Sistema de Trade Seguro
-local tradeConfirmed = false
-local friendConfirmed = false
-
--- Botón de autoconfirmación propia
-local confirmButton = Instance.new("TextButton", frame)
-confirmButton.Size = UDim2.new(1, -20, 0, 40)
-confirmButton.Position = UDim2.new(0, 10, 0, 250)
-confirmButton.Text = "Confirmar Trade"
-confirmButton.BackgroundColor3 = Color3.fromRGB(255, 180, 0)
-confirmButton.TextColor3 = Color3.new(1,1,1)
-
+-- Conectar botones
 confirmButton.MouseButton1Click:Connect(function()
-    tradeConfirmed = true
-    confirmButton.Text = "Confirmado ✔"
-    -- Aquí puedes enviar un RemoteEvent al servidor para registrar la confirmación
+    TradeConfirm:FireServer("Trade123") -- ID real del trade
+    status.Text = "Estado: Confirmado ✔"
 end)
 
--- Botón para confirmar amigo (simulado)
-local friendButton = Instance.new("TextButton", frame)
-friendButton.Size = UDim2.new(1, -20, 0, 40)
-friendButton.Position = UDim2.new(0, 10, 0, 300)
-friendButton.Text = "Esperando amigo..."
-friendButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-friendButton.TextColor3 = Color3.new(1,1,1)
-
-friendButton.MouseButton1Click:Connect(function()
-    friendConfirmed = true
-    friendButton.Text = "Amigo ✔"
-    -- Aquí también se enviaría al servidor
-    if tradeConfirmed and friendConfirmed then
-        print("Trade completado de forma segura")
-        -- Lógica de trade final aquí
-    end
+cancelButton.MouseButton1Click:Connect(function()
+    status.Text = "Estado: Cancelado ✖"
+    frame.Visible = false
 end)
