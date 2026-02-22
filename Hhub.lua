@@ -1,7 +1,7 @@
--- Script moderno para Roblox con panel de sliders
+-- Script avanzado para Roblox con panel Hb
 -- Colócalo en StarterPlayerScripts como LocalScript
 
--- Valores iniciales
+-- Configuración inicial
 local defaultSpeed = 16
 local defaultJump = 50
 local defaultFly = 0
@@ -13,59 +13,73 @@ local humanoid = character:WaitForChild("Humanoid")
 
 -- Crear GUI
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-screenGui.Name = "ControlPanel"
+screenGui.Name = "Hb"
 
 local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 250, 0, 200)
+frame.Size = UDim2.new(0, 250, 0, 250)
 frame.Position = UDim2.new(0, 20, 0, 100)
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.Active = true
+frame.Draggable = true -- Permite mover el panel
 
--- Función para crear sliders
-local function createSlider(name, min, max, default, positionY, callback)
-    local label = Instance.new("TextLabel", frame)
-    label.Size = UDim2.new(1, -10, 0, 20)
-    label.Position = UDim2.new(0, 5, 0, positionY)
-    label.Text = name .. ": " .. default
-    label.TextColor3 = Color3.new(1,1,1)
-    label.BackgroundTransparency = 1
-
-    local slider = Instance.new("TextButton", frame)
-    slider.Size = UDim2.new(1, -10, 0, 20)
-    slider.Position = UDim2.new(0, 5, 0, positionY + 25)
-    slider.Text = tostring(default)
-    slider.BackgroundColor3 = Color3.fromRGB(80, 80, 200)
-
-    slider.MouseButton1Click:Connect(function()
-        local newValue = tonumber(slider.Text)
-        if newValue then
-            newValue = math.clamp(newValue + 5, min, max)
-            slider.Text = tostring(newValue)
-            label.Text = name .. ": " .. newValue
-            callback(newValue)
-        end
-    end)
+-- Función para crear botones
+local function createButton(text, posY, callback)
+    local button = Instance.new("TextButton", frame)
+    button.Size = UDim2.new(1, -10, 0, 40)
+    button.Position = UDim2.new(0, 5, 0, posY)
+    button.Text = text
+    button.BackgroundColor3 = Color3.fromRGB(80, 80, 200)
+    button.TextColor3 = Color3.new(1,1,1)
+    button.MouseButton1Click:Connect(callback)
+    return button
 end
 
--- Slider para velocidad
-createSlider("Velocidad", 16, 100, defaultSpeed, 5, function(value)
-    humanoid.WalkSpeed = value
+-- Botón: Sprint
+createButton("Toggle Sprint", 5, function()
+    humanoid.WalkSpeed = (humanoid.WalkSpeed == defaultSpeed) and 32 or defaultSpeed
 end)
 
--- Slider para salto
-createSlider("Salto", 50, 200, defaultJump, 60, function(value)
-    humanoid.JumpPower = value
+-- Botón: High Jump
+createButton("Toggle High Jump", 50, function()
+    humanoid.JumpPower = (humanoid.JumpPower == defaultJump) and 120 or defaultJump
 end)
 
--- Slider para vuelo
-createSlider("Vuelo", 0, 100, defaultFly, 115, function(value)
+-- Botón: Fly
+createButton("Toggle Fly", 95, function()
     local hrp = character:WaitForChild("HumanoidRootPart")
     local bv = hrp:FindFirstChild("BodyVelocity")
-    if not bv then
+    if bv then
+        bv:Destroy()
+    else
         bv = Instance.new("BodyVelocity")
         bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bv.Velocity = Vector3.new(0, 50, 0)
         bv.Parent = hrp
     end
-    bv.Velocity = Vector3.new(0, value, 0)
+end)
+
+-- Botón: Golpear (simulación de ataque)
+createButton("Golpear", 140, function()
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    for _, target in pairs(workspace:GetChildren()) do
+        if target:IsA("Model") and target:FindFirstChild("Humanoid") and target ~= character then
+            local distance = (target.PrimaryPart.Position - hrp.Position).Magnitude
+            if distance < 10 then
+                target.Humanoid:TakeDamage(10) -- daño simulado
+            end
+        end
+    end
+end)
+
+-- Botón: Invisibilidad
+createButton("Toggle Invisibilidad", 185, function()
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Transparency = (part.Transparency == 0) and 1 or 0
+        elseif part:IsA("Decal") then
+            part.Transparency = (part.Transparency == 0) and 1 or 0
+        end
+    end
 end)
 
 -- Reset al respawnear
