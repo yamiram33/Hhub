@@ -2,8 +2,8 @@
 -- Colócalo en StarterPlayerScripts como LocalScript
 
 -- Configuración
-local normalSpeed = 16      -- Velocidad estándar de Roblox
-local sprintSpeed = 32      -- Velocidad al correr
+local normalSpeed = 36      -- Velocidad estándar de Roblox
+local sprintSpeed = 52      -- Velocidad al correr
 local sprintKey = Enum.KeyCode.LeftShift -- Tecla para activar sprint
 
 -- Referencias
