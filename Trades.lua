@@ -1,17 +1,17 @@
 --// ALPLAXX HUB — RELEASE
---// Panel movible + optimización + tradeo simulado + admin panel
+--// Panel movible + optimización + tradeo simulado + admin panel extendido
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "ALPLAXX_HUB"
 ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 400, 0, 350)
-MainFrame.Position = UDim2.new(0.5, -200, 0.5, -175)
+MainFrame.Size = UDim2.new(0, 400, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -200)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true -- 🔑 Panel movible
+MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 local Title = Instance.new("TextLabel")
@@ -46,7 +46,7 @@ end)
 -- Botón Tradeo simulado
 local TradeButton = Instance.new("TextButton")
 TradeButton.Size = UDim2.new(0.8, 0, 0, 40)
-TradeButton.Position = UDim2.new(0.1, 0, 0.4, 0)
+TradeButton.Position = UDim2.new(0.1, 0, 0.35, 0)
 TradeButton.Text = "🤝 Forzar Tradeo (Simulado)"
 TradeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 TradeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -71,7 +71,6 @@ TradeButton.MouseButton1Click:Connect(function()
 
     if closest then
         print("Solicitud de tradeo enviada a: "..closest.Name)
-        -- Aquí deberías conectar con la función interna del juego que abre el tradeo
     else
         print("No hay jugadores cerca para tradear.")
     end
@@ -80,7 +79,7 @@ end)
 -- Botón Updates
 local UpdateButton = Instance.new("TextButton")
 UpdateButton.Size = UDim2.new(0.8, 0, 0, 40)
-UpdateButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+UpdateButton.Position = UDim2.new(0.1, 0, 0.5, 0)
 UpdateButton.Text = "🌐 Revisar Updates"
 UpdateButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 UpdateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -95,7 +94,7 @@ end)
 -- Botón Admin Panel
 local AdminButton = Instance.new("TextButton")
 AdminButton.Size = UDim2.new(0.8, 0, 0, 40)
-AdminButton.Position = UDim2.new(0.1, 0, 0.8, 0)
+AdminButton.Position = UDim2.new(0.1, 0, 0.65, 0)
 AdminButton.Text = "🛠️ Activar Admin Panel"
 AdminButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 AdminButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -105,16 +104,17 @@ AdminButton.Parent = MainFrame
 
 AdminButton.MouseButton1Click:Connect(function()
     local AdminFrame = Instance.new("Frame")
-    AdminFrame.Size = UDim2.new(0, 300, 0, 200)
-    AdminFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+    AdminFrame.Size = UDim2.new(0, 300, 0, 250)
+    AdminFrame.Position = UDim2.new(0.5, -150, 0.5, -125)
     AdminFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     AdminFrame.Active = true
     AdminFrame.Draggable = true
     AdminFrame.Parent = ScreenGui
 
+    -- Velocidad
     local SpeedButton = Instance.new("TextButton")
     SpeedButton.Size = UDim2.new(0.8, 0, 0, 40)
-    SpeedButton.Position = UDim2.new(0.1, 0, 0.2, 0)
+    SpeedButton.Position = UDim2.new(0.1, 0, 0.1, 0)
     SpeedButton.Text = "⚡ Activar Velocidad"
     SpeedButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     SpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -130,9 +130,10 @@ AdminButton.MouseButton1Click:Connect(function()
         end
     end)
 
+    -- Super Salto
     local JumpButton = Instance.new("TextButton")
     JumpButton.Size = UDim2.new(0.8, 0, 0, 40)
-    JumpButton.Position = UDim2.new(0.1, 0, 0.5, 0)
+    JumpButton.Position = UDim2.new(0.1, 0, 0.3, 0)
     JumpButton.Text = "🌀 Activar Super Salto"
     JumpButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     JumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -147,4 +148,34 @@ AdminButton.MouseButton1Click:Connect(function()
             print("Super salto activado 🌀")
         end
     end)
-end)
+
+    -- Teleport
+    local TeleportButton = Instance.new("TextButton")
+    TeleportButton.Size = UDim2.new(0.8, 0, 0, 40)
+    TeleportButton.Position = UDim2.new(0.1, 0, 0.5, 0)
+    TeleportButton.Text = "📍 Teleport al jugador cercano"
+    TeleportButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    TeleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TeleportButton.Font = Enum.Font.Gotham
+    TeleportButton.TextScaled = true
+    TeleportButton.Parent = AdminFrame
+
+    TeleportButton.MouseButton1Click:Connect(function()
+        local player = game.Players.LocalPlayer
+        local closest = nil
+        local shortestDist = math.huge
+
+        for _, other in pairs(game.Players:GetPlayers()) do
+            if other ~= player and other.Character and player.Character then
+                local dist = (player.Character.PrimaryPart.Position - other.Character.PrimaryPart.Position).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closest = other
+                end
+            end
+        end
+
+        if closest and closest.Character then
+            player.Character:SetPrimaryPartCFrame(closest.Character.PrimaryPart.CFrame + Vector3.new(2,0,2))
+            print("Teleportado cerca de "..closest.Name.." 📍")
+                end
