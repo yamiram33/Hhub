@@ -1,0 +1,251 @@
+-- Steal a Brainrot Cheat GUI
+-- Por Grok - Usa un executor como Krnl, Synapse o Fluxus
+-- ¡Cuidado! Puede banearte, usa cuenta alt
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+
+-- Variables
+local speedEnabled = false
+local jumpEnabled = false
+local flyEnabled = false
+local invisEnabled = false
+local speedVal = 100
+local jumpVal = 100
+local flyVal = 50
+
+local keysHeld = {
+    [Enum.KeyCode.W] = false,
+    [Enum.KeyCode.A] = false,
+    [Enum.KeyCode.S] = false,
+    [Enum.KeyCode.D] = false,
+    [Enum.KeyCode.Space] = false,
+    [Enum.KeyCode.LeftShift] = false,
+}
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "BrainrotCheats"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 380, 0, 380)
+main.Position = UDim2.new(0, 20, 0, 20)
+main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+main.BorderSizePixel = 0
+main.Parent = gui
+
+local cornerMain = Instance.new("UICorner")
+cornerMain.CornerRadius = UDim.new(0, 12)
+cornerMain.Parent = main
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 50)
+title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+title.BorderSizePixel = 0
+title.Text = "🧠 Steal a Brainrot Cheats"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.Parent = main
+
+local cornerTitle = Instance.new("UICorner")
+cornerTitle.CornerRadius = UDim.new(0, 12)
+cornerTitle.Parent = title
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 35, 0, 35)
+closeBtn.Position = UDim2.new(1, -40, 0, 7.5)
+closeBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.new(1,1,1)
+closeBtn.TextScaled = true
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Parent = title
+
+local cornerClose = Instance.new("UICorner")
+cornerClose.CornerRadius = UDim.new(0, 8)
+cornerClose.Parent = closeBtn
+
+-- Draggable
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Controles Fly
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    local kc = input.KeyCode
+    if keysHeld[kc] \~= nil then
+        keysHeld[kc] = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    local kc = input.KeyCode
+    if keysHeld[kc] \~= nil then
+        keysHeld[kc] = false
+    end
+end)
+
+-- Loops principales
+local mainLoop = RunService.Heartbeat:Connect(function()
+    local char = player.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if hum then
+        hum.WalkSpeed = speedEnabled and speedVal or 16
+        hum.JumpPower = jumpEnabled and jumpVal or 50
+        hum.JumpHeight = jumpEnabled and math.clamp(jumpVal / 50 * 7.2, 0, 50) or 7.2
+    end
+    if invisEnabled and char then
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+                part.Transparency = 1
+            end
+        end
+    end
+end)
+
+local flyLoop = RunService.Heartbeat:Connect(function()
+    if not flyEnabled then return end
+    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local fv = root:FindFirstChild("fv")
+    if not fv then
+        fv = Instance.new("BodyVelocity")
+        fv.Name = "fv"
+        fv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        fv.Velocity = Vector3.new(0, 0, 0)
+        fv.Parent = root
+    end
+    local fg = root:FindFirstChild("fg")
+    if not fg then
+        fg = Instance.new("BodyGyro")
+        fg.Name = "fg"
+        fg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        fg.P = 20000
+        fg.CFrame = root.CFrame
+        fg.Parent = root
+    end
+    local cam = workspace.CurrentCamera
+    local vel = cam.CFrame:VectorToWorldSpace(
+        Vector3.new(
+            (keysHeld[Enum.KeyCode.D] and 1 or 0) - (keysHeld[Enum.KeyCode.A] and 1 or 0),
+            (keysHeld[Enum.KeyCode.Space] and 1 or 0) - (keysHeld[Enum.KeyCode.LeftShift] and 1 or 0),
+            (keysHeld[Enum.KeyCode.W] and 1 or 0) - (keysHeld[Enum.KeyCode.S] and 1 or 0)
+        )
+    ) * flyVal
+    fv.Velocity = vel
+    fg.CFrame = cam.CFrame
+end)
+
+-- Funciones toggle
+local function createToggle(name, yPos, enabledVar, valVar, defaultVal, maxVal, toggleCallback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -20, 0, 50)
+    frame.Position = UDim2.new(0, 10, 0, yPos)
+    frame.BackgroundTransparency = 1
+    frame.Parent = main
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.6, 0, 1, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    btn.Text = name .. ": OFF"
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.TextScaled = true
+    btn.Font = Enum.Font.GothamBold
+    btn.BorderSizePixel = 0
+    btn.Parent = frame
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 10)
+    btnCorner.Parent = btn
+
+    local valBox = Instance.new("TextBox")
+    valBox.Size = UDim2.new(0.38, -10, 0.8, 0)
+    valBox.Position = UDim2.new(0.61, 0, 0.1, 0)
+    valBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    valBox.Text = tostring(defaultVal)
+    valBox.PlaceholderText = "100"
+    valBox.TextColor3 = Color3.new(1,1,1)
+    valBox.TextScaled = true
+    valBox.Font = Enum.Font.Gotham
+    valBox.BorderSizePixel = 0
+    valBox.ClearTextOnFocus = false
+    valBox.Parent = frame
+
+    local valCorner = Instance.new("UICorner")
+    valCorner.CornerRadius = UDim.new(0, 8)
+    valCorner.Parent = valBox
+
+    -- Update val
+    valBox.FocusLost:Connect(function()
+        local num = tonumber(valBox.Text)
+        if num then
+            valVar = math.clamp(num, 0, maxVal)
+            valBox.Text = tostring(valVar)
+        else
+            valBox.Text = tostring(valVar)
+        end
+    end)
+
+    -- Toggle
+    btn.MouseButton1Click:Connect(function()
+        enabledVar = not enabledVar
+        btn.Text = name .. (enabledVar and ": ON" or ": OFF")
+        btn.BackgroundColor3 = enabledVar and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+        if toggleCallback then
+            toggleCallback()
+        end
+    end)
+
+    return btn, valBox
+end
+
+-- Crear toggles
+local _, speedBox = createToggle("Correr", 65, speedEnabled, speedVal, 100, 500, nil)
+local _, jumpBox = createToggle("Saltar", 125, jumpEnabled, jumpVal, 100, 500, nil)
+local _, flyBox = createToggle("Volar", 185, flyEnabled, flyVal, 50, 200, function()
+    if not flyEnabled then
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            pcall(function() root:FindFirstChild("fv"):Destroy() end)
+            pcall(function() root:FindFirstChild("fg"):Destroy() end)
+        end
+    end
+end)
+local invisBtn, _ = createToggle("Invisible", 245, invisEnabled, nil, nil, nil, nil)
+
+-- Close
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+print("🧠 Script cargado! Controles Volar: WASD + Space (arriba) Shift (abajo)")
