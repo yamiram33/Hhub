@@ -1,181 +1,131 @@
---// ALPLAXX HUB — RELEASE
---// Panel movible + optimización + tradeo simulado + admin panel extendido
+-- LocalScript en StarterGui
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ALPLAXX_HUB"
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
 
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 400, 0, 400)
-MainFrame.Position = UDim2.new(0.5, -200, 0.5, -200)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
+-- Crear ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundTransparency = 1
-Title.Text = "✨ ALPLAXX HUB ✨"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Font = Enum.Font.GothamBold
-Title.TextScaled = true
-Title.Parent = MainFrame
+-- Crear Frame (panel movible estilizado)
+local panel = Instance.new("Frame")
+panel.Size = UDim2.new(0, 240, 0, 320)
+panel.Position = UDim2.new(0, 50, 0, 50)
+panel.BackgroundColor3 = Color3.fromRGB(25,25,35)
+panel.BorderSizePixel = 0
+panel.Active = true
+panel.Draggable = true
+panel.Parent = screenGui
 
--- Botón Optimización
-local OptimizeButton = Instance.new("TextButton")
-OptimizeButton.Size = UDim2.new(0.8, 0, 0, 40)
-OptimizeButton.Position = UDim2.new(0.1, 0, 0.2, 0)
-OptimizeButton.Text = "🚀 Optimizar Rendimiento"
-OptimizeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-OptimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-OptimizeButton.Font = Enum.Font.Gotham
-OptimizeButton.TextScaled = true
-OptimizeButton.Parent = MainFrame
+-- UICorner para bordes redondeados
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0,12)
+corner.Parent = panel
 
-OptimizeButton.MouseButton1Click:Connect(function()
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
-            obj.Enabled = false
-        end
-    end
-    print("Rendimiento optimizado ✅")
-end)
+-- Etiqueta de título
+local titulo = Instance.new("TextLabel")
+titulo.Size = UDim2.new(1,0,0,40)
+titulo.BackgroundTransparency = 1
+titulo.Text = "⚙️ Control Panel"
+titulo.TextColor3 = Color3.fromRGB(255,255,255)
+titulo.Font = Enum.Font.GothamBold
+titulo.TextSize = 20
+titulo.Parent = panel
 
--- Botón Tradeo simulado
-local TradeButton = Instance.new("TextButton")
-TradeButton.Size = UDim2.new(0.8, 0, 0, 40)
-TradeButton.Position = UDim2.new(0.1, 0, 0.35, 0)
-TradeButton.Text = "🤝 Forzar Tradeo (Simulado)"
-TradeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-TradeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-TradeButton.Font = Enum.Font.Gotham
-TradeButton.TextScaled = true
-TradeButton.Parent = MainFrame
+-- Función para crear botones estilizados
+local function crearBoton(texto, callback, parent, y)
+    local boton = Instance.new("TextButton")
+    boton.Size = UDim2.new(1, -20, 0, 35)
+    boton.Position = UDim2.new(0, 10, 0, y)
+    boton.BackgroundColor3 = Color3.fromRGB(45,45,65)
+    boton.TextColor3 = Color3.fromRGB(255,255,255)
+    boton.Font = Enum.Font.Gotham
+    boton.TextSize = 16
+    boton.Text = texto
+    boton.Parent = parent
 
-TradeButton.MouseButton1Click:Connect(function()
-    local player = game.Players.LocalPlayer
-    local closest = nil
-    local shortestDist = math.huge
+    -- Bordes redondeados
+    local bcorner = Instance.new("UICorner")
+    bcorner.CornerRadius = UDim.new(0,8)
+    bcorner.Parent = boton
 
+    -- Animación hover
+    boton.MouseEnter:Connect(function()
+        boton.BackgroundColor3 = Color3.fromRGB(70,70,120)
+    end)
+    boton.MouseLeave:Connect(function()
+        boton.BackgroundColor3 = Color3.fromRGB(45,45,65)
+    end)
+
+    boton.MouseButton1Click:Connect(callback)
+    return boton
+end
+
+-- Funciones de Admin Panel
+local function velocidad() humanoid.WalkSpeed = 50 end
+local function superSalto() humanoid.JumpPower = 150 end
+local function jugadorCercano()
+    local closest, shortestDist = nil, math.huge
     for _, other in pairs(game.Players:GetPlayers()) do
-        if other ~= player and other.Character and player.Character then
-            local dist = (player.Character.PrimaryPart.Position - other.Character.PrimaryPart.Position).Magnitude
-            if dist < shortestDist then
-                shortestDist = dist
-                closest = other
-            end
+        if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
+            local dist = (character.HumanoidRootPart.Position - other.Character.HumanoidRootPart.Position).Magnitude
+            if dist < shortestDist then shortestDist, closest = dist, other end
         end
     end
-
-    if closest then
-        print("Solicitud de tradeo enviada a: "..closest.Name)
+    if closest then print("Jugador cercano: "..closest.Name) end
+end
+local function ocultarPersonaje()
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") or part:IsA("Decal") then part.Transparency = 1 end
+    end
+end
+local function teleport() character:MoveTo(Vector3.new(0,50,0)) end
+local function invisibilidad()
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then part.Transparency = 0.5 end
+    end
+    humanoid.NameDisplayDistance = 0
+end
+local flying, bodyVelocity = false, nil
+local function fly()
+    flying = not flying
+    if flying then
+        bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = Vector3.new(0,0,0)
+        bodyVelocity.MaxForce = Vector3.new(4000,4000,4000)
+        bodyVelocity.Parent = character.HumanoidRootPart
     else
-        print("No hay jugadores cerca para tradear.")
+        if bodyVelocity then bodyVelocity:Destroy() end
     end
-end)
+end
 
--- Botón Updates
-local UpdateButton = Instance.new("TextButton")
-UpdateButton.Size = UDim2.new(0.8, 0, 0, 40)
-UpdateButton.Position = UDim2.new(0.1, 0, 0.5, 0)
-UpdateButton.Text = "🌐 Revisar Updates"
-UpdateButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-UpdateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-UpdateButton.Font = Enum.Font.Gotham
-UpdateButton.TextScaled = true
-UpdateButton.Parent = MainFrame
+-- Botones principales
+crearBoton("Optimización", function() print("Optimización ejecutada") end, panel, 50)
+crearBoton("Tradeo Simulado", function() print("Tradeo simulado") end, panel, 90)
+crearBoton("Actualizaciones", function() print("Actualizaciones disponibles") end, panel, 130)
 
-UpdateButton.MouseButton1Click:Connect(function()
-    print("Revisando actualizaciones 🌐")
-end)
+-- Admin Panel toggle
+local adminFrame = Instance.new("Frame")
+adminFrame.Size = UDim2.new(1, -20, 0, 200)
+adminFrame.Position = UDim2.new(0, 10, 0, 170)
+adminFrame.BackgroundColor3 = Color3.fromRGB(35,35,50)
+adminFrame.Visible = false
+adminFrame.Parent = panel
 
--- Botón Admin Panel
-local AdminButton = Instance.new("TextButton")
-AdminButton.Size = UDim2.new(0.8, 0, 0, 40)
-AdminButton.Position = UDim2.new(0.1, 0, 0.65, 0)
-AdminButton.Text = "🛠️ Activar Admin Panel"
-AdminButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-AdminButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-AdminButton.Font = Enum.Font.Gotham
-AdminButton.TextScaled = true
-AdminButton.Parent = MainFrame
+local acorner = Instance.new("UICorner")
+acorner.CornerRadius = UDim.new(0,10)
+acorner.Parent = adminFrame
 
-AdminButton.MouseButton1Click:Connect(function()
-    local AdminFrame = Instance.new("Frame")
-    AdminFrame.Size = UDim2.new(0, 300, 0, 250)
-    AdminFrame.Position = UDim2.new(0.5, -150, 0.5, -125)
-    AdminFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    AdminFrame.Active = true
-    AdminFrame.Draggable = true
-    AdminFrame.Parent = ScreenGui
+crearBoton("Admin Panel", function()
+    adminFrame.Visible = not adminFrame.Visible
+end, panel, 210)
 
-    -- Velocidad
-    local SpeedButton = Instance.new("TextButton")
-    SpeedButton.Size = UDim2.new(0.8, 0, 0, 40)
-    SpeedButton.Position = UDim2.new(0.1, 0, 0.1, 0)
-    SpeedButton.Text = "⚡ Activar Velocidad"
-    SpeedButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    SpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SpeedButton.Font = Enum.Font.Gotham
-    SpeedButton.TextScaled = true
-    SpeedButton.Parent = AdminFrame
-
-    SpeedButton.MouseButton1Click:Connect(function()
-        local player = game.Players.LocalPlayer
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.WalkSpeed = 50
-            print("Velocidad activada ⚡")
-        end
-    end)
-
-    -- Super Salto
-    local JumpButton = Instance.new("TextButton")
-    JumpButton.Size = UDim2.new(0.8, 0, 0, 40)
-    JumpButton.Position = UDim2.new(0.1, 0, 0.3, 0)
-    JumpButton.Text = "🌀 Activar Super Salto"
-    JumpButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    JumpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    JumpButton.Font = Enum.Font.Gotham
-    JumpButton.TextScaled = true
-    JumpButton.Parent = AdminFrame
-
-    JumpButton.MouseButton1Click:Connect(function()
-        local player = game.Players.LocalPlayer
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            player.Character.Humanoid.JumpPower = 150
-            print("Super salto activado 🌀")
-        end
-    end)
-
-    -- Teleport
-    local TeleportButton = Instance.new("TextButton")
-    TeleportButton.Size = UDim2.new(0.8, 0, 0, 40)
-    TeleportButton.Position = UDim2.new(0.1, 0, 0.5, 0)
-    TeleportButton.Text = "📍 Teleport al jugador cercano"
-    TeleportButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    TeleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TeleportButton.Font = Enum.Font.Gotham
-    TeleportButton.TextScaled = true
-    TeleportButton.Parent = AdminFrame
-
-    TeleportButton.MouseButton1Click:Connect(function()
-        local player = game.Players.LocalPlayer
-        local closest = nil
-        local shortestDist = math.huge
-
-        for _, other in pairs(game.Players:GetPlayers()) do
-            if other ~= player and other.Character and player.Character then
-                local dist = (player.Character.PrimaryPart.Position - other.Character.PrimaryPart.Position).Magnitude
-                if dist < shortestDist then
-                    shortestDist = dist
-                    closest = other
-                end
-            end
-        end
-
-        if closest and closest.Character then
-            player.Character:SetPrimaryPartCFrame(closest.Character.PrimaryPart.CFrame + Vector3.new(2,0,2))
-            print("Teleportado cerca de "..closest.Name.." 📍")
-                end
+-- Botones Admin Panel
+crearBoton("Velocidad", velocidad, adminFrame, 10)
+crearBoton("Super Salto", superSalto, adminFrame, 50)
+crearBoton("Jugador Cercano", jugadorCercano, adminFrame, 90)
+crearBoton("Ocultar Personaje", ocultarPersonaje, adminFrame, 130)
+crearBoton("Teleport", teleport, adminFrame, 170)
+crearBoton("Invisibilidad", invisibilidad, adminFrame, 210)
+crearBoton("Fly", fly, adminFrame, 250)
