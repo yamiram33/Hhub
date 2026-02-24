@@ -2,285 +2,358 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 -- // Variables
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
 local Gui = Instance.new("ScreenGui")
-Gui.Name = "StealABrainrot_ChilliHub"
+Gui.Name = "FuturisticAdvancedHub"
 Gui.Parent = Player.PlayerGui
 Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- // Paleta de Colores Moderna
+-- // Paleta de Colores Futurista
 local Colors = {
-    Background = Color3.fromRGB(22, 22, 26),
-    SidebarBg = Color3.fromRGB(30, 30, 35),
-    CardBg = Color3.fromRGB(38, 38, 45),
-    Primary = Color3.fromRGB(255, 85, 85), -- Acento rojizo como en la imagen
-    PrimaryActive = Color3.fromRGB(255, 110, 110),
-    Secondary = Color3.fromRGB(50, 50, 60),
-    Text = Color3.fromRGB(240, 240, 245),
-    TextDim = Color3.fromRGB(150, 150, 160),
-    ToggleOff = Color3.fromRGB(60, 60, 70),
-    ToggleOn = Color3.fromRGB(80, 250, 123) -- Verde brillante para estado activo
+    Background = Color3.fromRGB(10, 12, 20),
+    PanelBg = Color3.fromRGB(18, 20, 30),
+    AccentPrimary = Color3.fromRGB(0, 210, 255),
+    AccentSecondary = Color3.fromRGB(100, 255, 218),
+    AccentTertiary = Color3.fromRGB(255, 85, 255),
+    TextMain = Color3.fromRGB(255, 255, 255),
+    TextDim = Color3.fromRGB(150, 180, 220),
+    ToggleOff = Color3.fromRGB(35, 40, 55),
+    ToggleOn = Color3.fromRGB(0, 210, 255),
+    SliderBg = Color3.fromRGB(35, 40, 55),
+    SliderFill = Color3.fromRGB(100, 255, 218)
 }
 
--- // Funciones de Modificación (Adaptadas al juego)
-local ModFunctions = {
-    -- Pestaña Player
-    AntiRagdoll = {
+-- // Configuraciones Avanzadas
+local AdvancedSettings = {
+    Run = {
         Enabled = false,
-        Set = function(enabled)
-            ModFunctions.AntiRagdoll.Enabled = enabled
-            -- Lógica Anti-Ragdoll aquí
-        end
+        BaseSpeed = 16,
+        Multiplier = 3, -- Ajustable 1-10
+        Keybind = Enum.KeyCode.LeftShift
     },
-    SpeedBoost = {
+    Jump = {
         Enabled = false,
-        Value = 3, -- Multiplicador (requiere 3 rebirths como en la imagen)
-        Set = function(enabled, value)
-            ModFunctions.SpeedBoost.Enabled = enabled
-            ModFunctions.SpeedBoost.Value = value or ModFunctions.SpeedBoost.Value
-            -- Lógica Speed Boost aquí (Q como tecla de activación)
-        end
+        BasePower = 50,
+        Multiplier = 2, -- Ajustable 1-5
+        Infinite = false
     },
-    InfinityJump = {
+    Fly = {
         Enabled = false,
-        Set = function(enabled)
-            ModFunctions.InfinityJump.Enabled = enabled
-            -- Lógica Salto Infinito aquí
-        end
+        Speed = 60, -- Ajustable 10-150
+        Mode = "Smooth", -- Smooth/Classic
+        KeybindUp = Enum.KeyCode.Space,
+        KeybindDown = Enum.KeyCode.LeftControl
     },
-    ChilliBooster = {
+    Invisibility = {
         Enabled = false,
-        Value = 50,
-        Set = function(enabled, value)
-            ModFunctions.ChilliBooster.Enabled = enabled
-            ModFunctions.ChilliBooster.Value = value or ModFunctions.ChilliBooster.Value
-            -- Lógica Chilli Booster aquí
-        end
-    },
-    -- Pestaña Stealer
-    AutoSteal = {
-        Enabled = false,
-        Delay = 2, -- Segundos entre intentos
-        Set = function(enabled, delay)
-            ModFunctions.AutoSteal.Enabled = enabled
-            ModFunctions.AutoSteal.Delay = delay or ModFunctions.AutoSteal.Delay
-        end
-    },
-    -- Pestaña Helper
-    AutoFarm = {
-        Enabled = false,
-        Area = "FishZone",
-        Set = function(enabled, area)
-            ModFunctions.AutoFarm.Enabled = enabled
-            ModFunctions.AutoFarm.Area = area or ModFunctions.AutoFarm.Area
-        end
+        Transparency = 0.95, -- Ajustable 0.5-1
+        IgnoreHead = false,
+        ToggleKey = Enum.KeyCode.V
     }
+}
+
+-- // Funciones de Modificación (Avanzadas)
+local ModFunctions = {
+    -- Función Correr
+    UpdateRun = function()
+        if not Player.Character or not Player.Character:FindFirstChild("Humanoid") then return end
+        local Humanoid = Player.Character.Humanoid
+        Humanoid.WalkSpeed = AdvancedSettings.Run.Enabled and (AdvancedSettings.Run.BaseSpeed * AdvancedSettings.Run.Multiplier) or AdvancedSettings.Run.BaseSpeed
+    end,
+
+    -- Función Saltar
+    UpdateJump = function()
+        if not Player.Character or not Player.Character:FindFirstChild("Humanoid") then return end
+        local Humanoid = Player.Character.Humanoid
+        Humanoid.JumpPower = AdvancedSettings.Jump.Enabled and (AdvancedSettings.Jump.BasePower * AdvancedSettings.Jump.Multiplier) or AdvancedSettings.Jump.BasePower
+        
+        -- Lógica Salto Infinito
+        if AdvancedSettings.Jump.Infinite then
+            Humanoid:SetAttribute("InfiniteJump", true)
+        else
+            Humanoid:SetAttribute("InfiniteJump", false)
+        end
+    end,
+
+    -- Función Vuelo
+    FlyLoop = nil,
+    UpdateFly = function()
+        if AdvancedSettings.Fly.Enabled then
+            -- Iniciar bucle de vuelo
+            ModFunctions.FlyLoop = RunService.RenderStepped:Connect(function()
+                if not Player.Character or not Player.Character:FindFirstChild("HumanoidRootPart") then return end
+                local RootPart = Player.Character.HumanoidRootPart
+                local Camera = workspace.CurrentCamera
+                local Speed = AdvancedSettings.Fly.Speed / 30
+                
+                -- Movimiento WASD
+                local MoveDir = Vector3.new()
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then MoveDir += Camera.CFrame.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then MoveDir -= Camera.CFrame.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then MoveDir -= Camera.CFrame.RightVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then MoveDir += Camera.CFrame.RightVector end
+                
+                -- Movimiento Arriba/Abajo
+                if UserInputService:IsKeyDown(AdvancedSettings.Fly.KeybindUp) then MoveDir += Vector3.new(0, 1, 0) end
+                if UserInputService:IsKeyDown(AdvancedSettings.Fly.KeybindDown) then MoveDir -= Vector3.new(0, 1, 0) end
+                
+                -- Aplicar movimiento
+                MoveDir = MoveDir.Unit * Speed
+                if AdvancedSettings.Fly.Mode == "Smooth" then
+                    RootPart.Velocity = MoveDir * 30
+                else
+                    RootPart.CFrame += MoveDir
+                end
+            end)
+        else
+            -- Detener vuelo
+            if ModFunctions.FlyLoop then
+                ModFunctions.FlyLoop:Disconnect()
+                ModFunctions.FlyLoop = nil
+            end
+            if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+                Player.Character.Humanoid.PlatformStand = false
+            end
+        end
+    end,
+
+    -- Función Invisibilidad
+    UpdateInvisibility = function()
+        if not Player.Character then return end
+        for _, Part in ipairs(Player.Character:GetDescendants()) do
+            if Part:IsA("BasePart") or Part:IsA("Decal") then
+                if AdvancedSettings.Invisibility.IgnoreHead and Part.Name == "Head" then
+                    Part.Transparency = 0
+                else
+                    Part.Transparency = AdvancedSettings.Invisibility.Enabled and AdvancedSettings.Invisibility.Transparency or 0
+                end
+            end
+        end
+    end
 }
 
 -- // Crear Contenedor Principal
 local MainContainer = Instance.new("Frame")
-MainContainer.Name = "MainContainer"
-MainContainer.Size = UDim2.new(0, 700, 0, 550)
-MainContainer.Position = UDim2.new(0.5, -350, 0.5, -275)
+MainContainer.Size = UDim2.new(0, 450, 0, 620)
+MainContainer.Position = UDim2.new(0.5, -225, 0.5, -310)
 MainContainer.BackgroundColor3 = Colors.Background
 MainContainer.BorderSizePixel = 0
-MainContainer.CornerRadius = UDim.new(0, 12)
+MainContainer.CornerRadius = UDim.new(0, 16)
 MainContainer.ClipsDescendants = true
 MainContainer.Parent = Gui
 
--- // Sombra del Contenedor
-local ContainerShadow = Instance.new("ImageLabel")
-ContainerShadow.Name = "Shadow"
-ContainerShadow.Size = UDim2.new(1, 30, 1, 30)
-ContainerShadow.Position = UDim2.new(0, -15, 0, -15)
-ContainerShadow.BackgroundTransparency = 1
-ContainerShadow.Image = "rbxassetid://1316045217"
-ContainerShadow.ImageColor3 = Color3.new(0, 0, 0)
-ContainerShadow.ImageTransparency = 0.4
-ContainerShadow.ZIndex = 0
-ContainerShadow.Parent = MainContainer
+-- // Efecto de Fondo Dinámico
+local BackgroundEffect = Instance.new("ImageLabel")
+BackgroundEffect.Size = UDim2.new(1, 0, 1, 0)
+BackgroundEffect.BackgroundTransparency = 1
+BackgroundEffect.Image = "rbxassetid://10403162118"
+BackgroundEffect.ImageTransparency = 0.85
+BackgroundEffect.ZIndex = 0
+BackgroundEffect.Parent = MainContainer
 
--- // Barra Superior (Título)
+-- // Animación de Fondo
+RunService.RenderStepped:Connect(function(dt)
+    BackgroundEffect.Rotation += dt * 2
+    BackgroundEffect.Position = UDim2.new(0, math.sin(os.clock() * 0.5) * 5, 0, math.cos(os.clock() * 0.5) * 5)
+end)
+
+-- // Borde Neon
+local BorderGlow = Instance.new("Frame")
+BorderGlow.Size = UDim2.new(1, 10, 1, 10)
+BorderGlow.Position = UDim2.new(0, -5, 0, -5)
+BorderGlow.BackgroundTransparency = 1
+BorderGlow.ZIndex = 0
+BorderGlow.Parent = MainContainer
+
+local BorderGradient = Instance.new("UIGradient")
+BorderGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Colors.AccentPrimary),
+    ColorSequenceKeypoint.new(0.5, Colors.AccentSecondary),
+    ColorSequenceKeypoint.new(1, Colors.AccentPrimary)
+}
+BorderGradient.Rotation = 0
+BorderGradient.Parent = BorderGlow
+
+local BorderStroke = Instance.new("UIStroke")
+BorderStroke.Thickness = 2
+BorderStroke.Color = Colors.AccentPrimary
+BorderStroke.Transparency = 0.7
+BorderStroke.Parent = BorderGlow
+
+-- // Barra Superior
 local TopBar = Instance.new("Frame")
-TopBar.Name = "TopBar"
-TopBar.Size = UDim2.new(1, 0, 0, 45)
-TopBar.BackgroundColor3 = Colors.SidebarBg
+TopBar.Size = UDim2.new(1, 0, 0, 50)
+TopBar.BackgroundColor3 = Colors.PanelBg
+TopBar.BackgroundTransparency = 0.2
 TopBar.BorderSizePixel = 0
 TopBar.Parent = MainContainer
 
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(0.7, 0, 1, 0)
-TitleLabel.Position = UDim2.new(0, 15, 0, 0)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "STEAL A BRAINROT - CHILLI HUB"
-TitleLabel.TextColor3 = Colors.Text
-TitleLabel.TextSize = 16
-TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Parent = TopBar
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0.8, 0, 1, 0)
+Title.Position = UDim2.new(0, 20, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "NEXUS - ADVANCED HUB"
+Title.TextColor3 = Colors.TextMain
+Title.TextSize = 18
+Title.Font = Enum.Font.RobotoMono
+Title.Parent = TopBar
 
+-- // Botón Cerrar con Efecto
 local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 35, 0, 35)
-CloseBtn.Position = UDim2.new(1, -40, 0, 5)
-CloseBtn.BackgroundColor3 = Colors.Secondary
+CloseBtn.Size = UDim2.new(0, 40, 0, 40)
+CloseBtn.Position = UDim2.new(1, -45, 0, 5)
+CloseBtn.BackgroundColor3 = Colors.ToggleOff
 CloseBtn.Text = "X"
-CloseBtn.TextColor3 = Colors.Text
-CloseBtn.TextSize = 16
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.CornerRadius = UDim.new(0, 8)
+CloseBtn.TextColor3 = Colors.TextMain
+CloseBtn.TextSize = 18
+CloseBtn.Font = Enum.Font.RobotoMono
+CloseBtn.CornerRadius = UDim.new(1, 0)
 CloseBtn.Parent = TopBar
 
+-- Efecto Hover Botón Cerrar
+CloseBtn.MouseEnter:Connect(function()
+    TweenService:Create(CloseBtn, TweenInfo.new(0.2), {BackgroundColor3 = Colors.AccentTertiary}):Play()
+end)
+CloseBtn.MouseLeave:Connect(function()
+    TweenService:Create(CloseBtn, TweenInfo.new(0.2), {BackgroundColor3 = Colors.ToggleOff}):Play()
+end)
 CloseBtn.MouseButton1Click:Connect(function()
     Gui:Destroy()
 end)
 
--- // Panel Lateral (Navegación)
-local Sidebar = Instance.new("Frame")
-Sidebar.Name = "Sidebar"
-Sidebar.Size = UDim2.new(0, 180, 1, -45)
-Sidebar.Position = UDim2.new(0, 0, 0, 45)
-Sidebar.BackgroundColor3 = Colors.SidebarBg
-Sidebar.BorderSizePixel = 0
-Sidebar.Parent = MainContainer
+-- // Función para Crear Secciones con Encabezado
+local function CreateSection(title, yPos)
+    local Section = Instance.new("Frame")
+    Section.Size = UDim2.new(0.92, 0, 0, 135)
+    Section.Position = UDim2.new(0.04, 0, 0, yPos)
+    Section.BackgroundColor3 = Colors.PanelBg
+    Section.BackgroundTransparency = 0.1
+    Section.BorderSizePixel = 0
+    Section.CornerRadius = UDim.new(0, 12)
+    Section.ZIndex = 2
+    Section.Parent = MainContainer
 
--- // Función para Crear Botones de Navegación
-local ActiveTab = "Main"
-local ContentArea = Instance.new("ScrollingFrame")
-ContentArea.Name = "ContentArea"
-ContentArea.Size = UDim2.new(1, -180, 1, -45)
-ContentArea.Position = UDim2.new(0, 180, 0, 45)
-ContentArea.BackgroundColor3 = Colors.Background
-ContentArea.BorderSizePixel = 0
-ContentArea.ScrollBarThickness = 6
-ContentArea.CanvasSize = UDim2.new(1, 0, 2, 0)
-ContentArea.Parent = MainContainer
+    -- Efecto de Brillo en Sección
+    local SectionGlow = Instance.new("UIGradient")
+    SectionGlow.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
+        ColorSequenceKeypoint.new(1, Color3.new(1,1,1))
+    }
+    SectionGlow.Transparency = NumberSequence.new{
+        NumberSequenceKeypoint.new(0, 0.95),
+        NumberSequenceKeypoint.new(0.5, 0.85),
+        NumberSequenceKeypoint.new(1, 0.95)
+    }
+    SectionGlow.Rotation = 45
+    SectionGlow.Parent = Section
 
-local function CreateNavButton(name, displayName)
-    local Button = Instance.new("TextButton")
-    Button.Name = name.."Btn"
-    Button.Size = UDim2.new(1, 0, 0, 40)
-    Button.Position = UDim2.new(0, 0, 0, (40 * (#Sidebar:GetChildren()-1)))
-    Button.BackgroundColor3 = (ActiveTab == name) and Colors.Primary or Colors.SidebarBg
-    Button.Text = displayName
-    Button.TextColor3 = Colors.Text
-    Button.TextSize = 14
-    Button.Font = Enum.Font.Gotham
-    Button.BorderSizePixel = 0
-    Button.Parent = Sidebar
+    local SectionTitle = Instance.new("TextLabel")
+    SectionTitle.Size = UDim2.new(1, 0, 0, 30)
+    SectionTitle.Position = UDim2.new(0, 15, 0, 10)
+    SectionTitle.BackgroundTransparency = 1
+    SectionTitle.Text = title
+    SectionTitle.TextColor3 = Colors.AccentPrimary
+    SectionTitle.TextSize = 16
+    SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+    SectionTitle.Font = Enum.Font.RobotoMono
+    SectionTitle.ZIndex = 3
+    SectionTitle.Parent = Section
 
-    Button.MouseButton1Click:Connect(function()
-        ActiveTab = name
-        -- Actualizar colores de botones
-        for _, btn in ipairs(Sidebar:GetChildren()) do
-            if btn:IsA("TextButton") then
-                btn.BackgroundColor3 = (btn.Name == name.."Btn") and Colors.Primary or Colors.SidebarBg
-            end
-        end
-        -- Cargar contenido de la pestaña
-        LoadTabContent(name)
-    end)
-
-    -- Efecto Hover
-    Button.MouseEnter:Connect(function()
-        if Button.BackgroundColor3 ~= Colors.Primary then
-            Button.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-        end
-    end)
-    Button.MouseLeave:Connect(function()
-        if Button.BackgroundColor3 ~= Colors.Primary then
-            Button.BackgroundColor3 = Colors.SidebarBg
-        end
-    end)
+    return Section
 end
 
--- // Crear Botones de Navegación
-CreateNavButton("Main", "Main (Fish)")
-CreateNavButton("Stealer", "Stealer")
-CreateNavButton("Helper", "Helper")
-CreateNavButton("Player", "Player")
-CreateNavButton("Finder", "Finder")
-CreateNavButton("Server", "Server")
-CreateNavButton("Discord", "Discord")
-
--- // Función para Crear Tarjetas de Opciones
-local function CreateCard(parent, title)
-    local Card = Instance.new("Frame")
-    Card.Size = UDim2.new(0.95, 0, 0, 120)
-    Card.Position = UDim2.new(0.025, 0, 0, (#parent:GetChildren()-1)*130)
-    Card.BackgroundColor3 = Colors.CardBg
-    Card.BorderSizePixel = 0
-    Card.CornerRadius = UDim.new(0, 8)
-    Card.Parent = parent
-
-    local CardTitle = Instance.new("TextLabel")
-    CardTitle.Size = UDim2.new(1, 0, 0, 30)
-    CardTitle.BackgroundTransparency = 1
-    CardTitle.Text = title
-    CardTitle.TextColor3 = Colors.Text
-    CardTitle.TextSize = 15
-    CardTitle.TextXAlignment = Enum.TextXAlignment.Left
-    CardTitle.Font = Enum.Font.GothamBold
-    CardTitle.Position = UDim2.new(0, 15, 0, 10)
-    CardTitle.Parent = Card
-
-    return Card
-end
-
--- // Función para Crear Toggle con Etiqueta
-local function CreateToggle(card, name, displayName, desc, yPos, hasSlider, sliderMin, sliderMax, defaultVal)
+-- // Función para Crear Toggle Moderno
+local function CreateModernToggle(parent, name, displayName, yPos)
     local ToggleFrame = Instance.new("Frame")
-    ToggleFrame.Size = UDim2.new(1, -30, 0, 35)
+    ToggleFrame.Size = UDim2.new(1, -30, 0, 30)
     ToggleFrame.Position = UDim2.new(0, 15, 0, yPos)
     ToggleFrame.BackgroundTransparency = 1
-    ToggleFrame.Parent = card
+    ToggleFrame.ZIndex = 3
+    ToggleFrame.Parent = parent
 
     local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(0.7, 0, 0.5, 0)
+    Label.Size = UDim2.new(0.7, 0, 1, 0)
     Label.BackgroundTransparency = 1
     Label.Text = displayName
-    Label.TextColor3 = Colors.Text
+    Label.TextColor3 = Colors.TextMain
     Label.TextSize = 14
-    Label.Font = Enum.Font.Gotham
+    Label.Font = Enum.Font.RobotoMono
+    Label.ZIndex = 3
     Label.Parent = ToggleFrame
 
-    local DescLabel = Instance.new("TextLabel")
-    DescLabel.Size = UDim2.new(0.7, 0, 0.5, 0)
-    DescLabel.Position = UDim2.new(0, 0, 0.5, 0)
-    DescLabel.BackgroundTransparency = 1
-    DescLabel.Text = desc
-    DescLabel.TextColor3 = Colors.TextDim
-    DescLabel.TextSize = 11
-    DescLabel.Font = Enum.Font.Gotham
-    DescLabel.Parent = ToggleFrame
-
     local ToggleBtn = Instance.new("TextButton")
-    ToggleBtn.Name = name.."Toggle"
-    ToggleBtn.Size = UDim2.new(0, 45, 0, 20)
-    ToggleBtn.Position = UDim2.new(1, -50, 0.25, 0)
-    ToggleBtn.BackgroundColor3 = ModFunctions[name].Enabled and Colors.ToggleOn or Colors.ToggleOff
+    ToggleBtn.Size = UDim2.new(0, 50, 0, 22)
+    ToggleBtn.Position = UDim2.new(1, -55, 0.5, -11)
+    ToggleBtn.BackgroundColor3 = AdvancedSettings[name].Enabled and Colors.ToggleOn or Colors.ToggleOff
     ToggleBtn.Text = ""
     ToggleBtn.CornerRadius = UDim.new(1, 0)
+    ToggleBtn.ZIndex = 3
     ToggleBtn.Parent = ToggleFrame
 
     local ToggleKnob = Instance.new("Frame")
-    ToggleKnob.Name = "Knob"
-    ToggleKnob.Size = UDim2.new(0, 16, 0, 16)
-    ToggleKnob.Position = UDim2.new(ModFunctions[name].Enabled and 1 or 0, ModFunctions[name].Enabled and -21 or 2, 0.5, -8)
-    ToggleKnob.BackgroundColor3 = Colors.Text
+    ToggleKnob.Size = UDim2.new(0, 18, 0, 18)
+    ToggleKnob.Position = UDim2.new(AdvancedSettings[name].Enabled and 1 or 0, AdvancedSettings[name].Enabled and -23 or 2, 0.5, -9)
+    ToggleKnob.BackgroundColor3 = Colors.TextMain
     ToggleKnob.CornerRadius = UDim.new(1, 0)
+    ToggleKnob.ZIndex = 4
     ToggleKnob.Parent = ToggleBtn
 
-    -- Lógica del Toggle
+    -- Animación Toggle
     ToggleBtn.MouseButton1Click:Connect(function()
-        local NewState = not ModFunctions[name].Enabled
-        ModFunctions[name].Set(NewState, ModFunctions[name].Value or ModFunctions[name].Delay or nil)
+        AdvancedSettings[name].Enabled = not AdvancedSettings[name].Enabled
         
         -- Actualizar visual
-        ToggleBtn.BackgroundColor3 = NewState and Colors.ToggleOn or Colors.ToggleOff
-        ToggleKnob:TweenPosition(
-            UDim2.new(NewState and 1 or 0, NewState and -21 or 2, 0.5, -8),
+        TweenService:Create(ToggleBtn, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+            BackgroundColor3 = AdvancedSettings[name].Enabled and Colors.ToggleOn or Colors.ToggleOff
+        }):Play()
+        TweenService:Create(ToggleKnob, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+            Position = UDim2.new(AdvancedSettings[name].Enabled and 1 or 0, AdvancedSettings[name].Enabled and -23 or 2, 0.5, -9)
+        }):Play()
+
+        -- Actualizar función
+        if name == "Run" then ModFunctions.UpdateRun()
+        elseif name == "Jump" then ModFunctions.UpdateJump()
+        elseif name == "Fly" then ModFunctions.UpdateFly()
+        elseif name == "Invisibility" then ModFunctions.UpdateInvisibility() end
+    end)
+
+    return ToggleFrame
+end
+
+-- // Función para Crear Slider Avanzado
+local function CreateAdvancedSlider(parent, name, setting, displayName, min, max, default, yPos)
+    local SliderFrame = Instance.new("Frame")
+    SliderFrame.Size = UDim2.new(1, -30, 0, 35)
+    SliderFrame.Position = UDim2.new(0, 15, 0, yPos)
+    SliderFrame.BackgroundTransparency = 1
+    SliderFrame.ZIndex = 3
+    SliderFrame.Parent = parent
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(0.4, 0, 1, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = displayName..": "..default
+    Label.TextColor3 = Colors.TextDim
+    Label.TextSize = 13
+    Label.Font = Enum.Font.RobotoMono
+    Label.ZIndex = 3
+    Label.Parent = SliderFrame
+
+    local SliderBg = Instance.new("Frame")
+    SliderBg.Size = UDim2.new(0.55, 0, 0, 4)
+    SliderBg.Position = UDim2.new(0.45, 0, 0.5, -2)
+    SliderBg.BackgroundColor3 = Colors.SliderBg
+    SliderBg.CornerRadius = UDim.new(1, 0)
+    SliderBg.ZIndex = 3
+    SliderBg.Parent = SliderFrame
+
+    local SliderFill = Instance.new("Frame")
+    Slider
+    ,
             Enum.EasingDirection.InOut,
             Enum.EasingStyle.Quad,
             0.2,
